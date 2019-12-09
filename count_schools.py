@@ -61,7 +61,7 @@ def updateSchoolCount(Node):
 
 def readData(filename):
     if os.path.exists(filename):
-        with open(filename, newline='') as csvFile:
+        with open(filename, 'r') as csvFile:
             reader = csv.DictReader(csvFile)
             prepData(reader)
     else:
