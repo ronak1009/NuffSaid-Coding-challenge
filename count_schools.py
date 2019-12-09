@@ -1,6 +1,5 @@
 import csv
 import os
-
 solution1 = None
 
 # schoolData
@@ -170,12 +169,20 @@ def writeDict(fileHandle, data):
         fileHandle.write(line)
 
 
+def createOutputFolder(filename):
+    if not os.path.exists('output'):
+        os.mkdir('output')
+    absfilepath = os.path.join('output', filename)
+
+    return absfilepath
+
+
 def print_counts():
     # prints the data for different queries
     result = {}
     query(schoolData, result)
-
-    with open('output.txt', 'w') as outputFile:
+    filename = createOutputFolder('query1.txt')
+    with open(filename, 'w') as outputFile:
         text = "Total Schools: " + str(schoolData.schoolCount) + "\n"
         outputFile.write(text)
 
