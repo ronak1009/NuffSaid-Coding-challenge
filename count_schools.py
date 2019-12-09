@@ -177,6 +177,32 @@ def createOutputFolder(filename):
     return absfilepath
 
 
+def findCity(queryContainer):
+    result = {
+        'name': "",
+        'count': 0
+    }
+    name = ""
+    count = 0
+
+    for city in queryContainer:
+        cityCount = queryContainer[city]
+        if count < cityCount:
+            name = city
+            count = cityCount
+    result['name'] = name
+    result['count'] = count
+    return result
+
+
+def findUniqueCity(container):
+    cityCount = 0
+    for city in container:
+        if container[city] > 0:
+            cityCount += 1
+    return cityCount
+
+
 def print_counts():
     # prints the data for different queries
     result = {}
@@ -193,6 +219,16 @@ def print_counts():
         text = "School by Metrocenter: " + "\n"
         outputFile.write(text)
         writeDict(outputFile, result['Metrocenter'])
+
+        maxCity = findCity(result['City'])
+        text = "City with most schools: " + maxCity['name'] + \
+            "( " + str(maxCity['count']) + " schools ) \n"
+        outputFile.write(text)
+
+        uniqueCities = findUniqueCity(result['City'])
+        text = 'Unique cities with at least one school: ' + \
+            str(uniqueCities) + "\n"
+        outputFile.write(text)
 
 
 #   main function
