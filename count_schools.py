@@ -1,133 +1,12 @@
 import csv
 import os
+from SchoolDataTree import *
+from readData import ReadCSV
 solution1 = None
 
-# schoolData
-#     states
-#         cities
-#             agency
-#                 metrocentric
-#                     school
 
-
+# global variables
 schoolData = None
-
-
-class Node:
-    def __init__(self, type):
-        self.type = type
-        self.children = {}
-
-
-class State (Node):
-    def __init__(self):
-        Node.__init__(self, 'State')
-        self.schoolCount = None
-
-
-class Agency (Node):
-    def __init__(self):
-        Node.__init__(self, 'Agency')
-        self.schoolCount = None
-
-
-class Metrocenter (Node):
-    def __init__(self):
-        Node.__init__(self, 'Metrocenter')
-        self.schoolCount = None
-
-
-class School (Node):
-    def __init__(self, name):
-        self.name = name
-        self.longitude = None
-        self.latitude = None
-
-
-class City (Node):
-    def __init__(self):
-        Node.__init__(self, 'City')
-        self.schoolCount = None
-
-# the node is passed for which the school count is to be updated
-
-
-def updateSchoolCount(Node):
-    count = 0
-    for child in Node.children:
-        count += Node.children[child].schoolCount
-    Node.schoolCount = count
-
-
-def readData(filename):
-    if os.path.exists(filename):
-        with open(filename, 'r') as csvFile:
-            reader = csv.DictReader(csvFile)
-            prepData(reader)
-    else:
-        return None
-
-
-def prepData(data):
-    global schoolData
-
-    schoolData = Node('root')
-    schoolData.schoolCount = 0
-    schoolData.children = {}
-
-    headers = data.fieldnames
-    for row in data:
-        # state LSTATE05 , city LCITY05, metrocentric MLOCALE,
-        # agency LEANM05, schoolName SCHNAM05,
-
-        state = row['LSTATE05']
-        city = row['LCITY05']
-        agency = row['LEANM05']
-        locale = row['MLOCALE']
-        schoolName = row['SCHNAM05']
-
-        # locale value is an int for which the data is available
-        # for no value, it is a string represented as 'N'
-        try:
-            locale = int(locale)
-        except ValueError:
-            pass
-
-        # arranging the data in the schoolData tree
-        if state in schoolData.children:
-            stateNode = schoolData.children[state]
-        else:
-            stateNode = State()
-            schoolData.children[state] = stateNode
-
-        if city in stateNode.children:
-            cityNode = stateNode.children[city]
-        else:
-            cityNode = City()
-            stateNode.children[city] = cityNode
-
-        if agency in cityNode.children:
-            agencyNode = cityNode.children[agency]
-        else:
-            agencyNode = Agency()
-            cityNode.children[agency] = agencyNode
-
-        if locale in agencyNode.children:
-            metroNode = agencyNode.children[locale]
-        else:
-            metroNode = Metrocenter()
-            agencyNode.children[locale] = metroNode
-
-        # fill the school details
-        if not schoolName in metroNode.children:
-            schoolNode = School(schoolName)
-            metroNode.children[schoolName] = schoolNode
-            metroNode.schoolCount = len(metroNode.children)
-
-        updateSchoolCount(agencyNode)
-        updateSchoolCount(cityNode)
-        updateSchoolCount(stateNode)
-        updateSchoolCount(schoolData)
 
 
 def getInstanceMap(NodeType, result):
@@ -231,9 +110,14 @@ def print_counts():
         outputFile.write(text)
 
 
-#   main function
-if __name__ == "__main__":
-    # global schoolData
-    readData("school_data.csv")
-
+def main():
+    global schoolData
+    fileReader = ReadCSV("school_data.csv")
+    fileReader.read()
+    schoolData = fileReader.data['rootNode']
     print_counts()
+
+
+    #   main function
+if __name__ == "__main__":
+    main()
