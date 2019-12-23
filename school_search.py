@@ -1,15 +1,51 @@
 from readData import ReadCSV
-
+from functools import reduce
+import datetime
 
 # global variables
 
+# global util methods
 
+
+def formatQueryList(queryString):
+    queryString = queryString.lower()
+    queryList = queryString.split(" ")
+    if queryList[-1] == 'school':
+        queryList.pop()
+    return queryList
+
+
+def isBad(str):
+    badwords = ("-", "(", ")")
+    return (str in badwords)
+
+
+# search engine class
 class SearchEngine:
     def __init__(self, database):
         self.searchIndex = {}
         self.database = database
         self.index = False
         self.list = []
+        self.matchCount = 3
+
+    def __findTopMatches__(self, matches):
+        lenMap = {}
+        for idx in matches:
+            word = self.list[idx]
+            key = len(word)
+            if key in lenMap:
+                lenMap[key].append(word)
+            else:
+                lenMap[key] = [word, ]
+
+        sortList = sorted(lenMap)
+        topResults = []
+        # filtering the top results
+        itr = iter(sortList)
+        while(len(topResults) < self.matchCount):
+            topResults.extend(lenMap[next(itr)])
+        return topResults
 
     def search(self, queryString):
         # todo implement
@@ -18,10 +54,24 @@ class SearchEngine:
             raise Exception(errorMsg)
         else:
             # implement the search logic after indexing is done
-            return []
+            matches = []
+            queryList = formatQueryList(queryString)
+            for query in queryList:
+                try:
+                    match = set(self.searchIndex[query])
+                    if len(matches) > 0:
+                        # FIND THE COMMON MATCH
+                        matches = matches & match
+                    else:
+                        matches = set(match)
+                except KeyError as err:
+                    err.message = "key not found in index"
+                    pass
+            topMatches = list(self.__findTopMatches__(matches))
+            return (topMatches[0:self.matchCount])
 
     def __prepSchoolList__(self, node):
-        if node.type == 'School':
+        if (node.type == 'School') and (not isBad(node.name)):
             self.list.append(node.name)
         elif len(node.children) != 0:
             for key in node.children:
@@ -29,11 +79,12 @@ class SearchEngine:
         return True
 
     def __prepSearchIndex__(self):
-        for sName, index in self.list:
-            splitnames = sName.split(" ")
+        for index, sName in enumerate(self.list):
             # splitname = ['abc', 'cfd', 'rred']
-            splitnames = [n.lower() for n in splitnames]
-            splitnames = splitnames.remove('school')
+            # splitnames = sName.split(" ")
+            # splitnames = [n.lower() for n in splitnames]
+            # splitnames = splitnames.remove('school')
+            splitnames = formatQueryList(sName)
             for ssname in splitnames:
                 # ssname=abc
                 if ssname in self.searchIndex:
@@ -52,7 +103,6 @@ class SearchEngine:
         # index
         #   word1 = [indexInSchoolList]
         self.__prepSchoolList__(self.database)
-
         # prepare the search index
         self.__prepSearchIndex__()
         # completed indexing
@@ -65,8 +115,11 @@ def main():
     data = fileReader.data['rootNode']
     google = SearchEngine(database=data)
     google.indexing()
-
-    print(google.searchIndex)
+    start = datetime.datetime.now()
+    matches = google.search("DETENTION CENTER")
+    end = datetime.datetime.now()
+    print(matches)
+    print("Search took total time ", end-start)
     # queryString = ""
     # results = google.search(queryString)
 
